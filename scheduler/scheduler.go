@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/100xlongx/job_scheduler/custom_error"
 	"github.com/100xlongx/job_scheduler/job"
 	"github.com/rs/zerolog/log"
 )
@@ -24,7 +25,7 @@ func New(ticker *time.Ticker, job job.Job) *Scheduler {
 	}
 }
 
-func (scheduler *Scheduler) Start() {
+func (scheduler *Scheduler) Start() error {
 	log.Info().Msg("Starting scheduler")
 
 	go func() {
@@ -44,6 +45,8 @@ func (scheduler *Scheduler) Start() {
 	}()
 
 	scheduler.ListenForErrors()
+
+	return nil
 }
 
 func (scheduler *Scheduler) ListenForErrors() {
@@ -51,13 +54,22 @@ func (scheduler *Scheduler) ListenForErrors() {
 
 	go func() {
 		for err := range scheduler.errorChannel {
-			log.Error().Err(err).Msg("Received an error from the scheduler")
+			switch e := err.(type) {
+			case *custom_error.FatalError:
+				log.Fatal().Err(e).Msg("Fatal error encountered, shutting down scheduler")
+				scheduler.Stop()
+			default:
+				log.Error().Err(e).Msg("Received an error from the scheduler")
+			}
+
 		}
 	}()
 }
 
-func (scheduler *Scheduler) Stop() {
+func (scheduler *Scheduler) Stop() error {
 	fmt.Println("Stopping scheduler")
 	scheduler.ticker.Stop()
 	scheduler.doneChannel <- true
+
+	return nil
 }

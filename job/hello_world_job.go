@@ -21,6 +21,7 @@ func NewHelloWorldJob(maxCount int) *HelloWorldJob {
 func (job *HelloWorldJob) Execute() error {
 	job.count++
 	if job.count > job.maxCount {
+		// return custom_error.NewFatalError("job has been executed too many times")
 		return errors.New("job has been executed too many times")
 	}
 
