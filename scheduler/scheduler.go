@@ -9,16 +9,18 @@ import (
 )
 
 type Scheduler struct {
-	job         job.Job
-	ticker      *time.Ticker
-	doneChannel chan bool
+	job          job.Job
+	ticker       *time.Ticker
+	doneChannel  chan bool
+	errorChannel chan error
 }
 
 func New(ticker *time.Ticker, job job.Job) *Scheduler {
 	return &Scheduler{
-		job:         job,
-		ticker:      ticker,
-		doneChannel: make(chan bool),
+		job:          job,
+		ticker:       ticker,
+		doneChannel:  make(chan bool),
+		errorChannel: make(chan error),
 	}
 }
 
@@ -35,9 +37,21 @@ func (scheduler *Scheduler) Start() {
 				err := scheduler.job.Execute()
 
 				if err != nil {
-					log.Error().Err(err).Msg("Error executing job")
+					scheduler.errorChannel <- err
 				}
 			}
+		}
+	}()
+
+	scheduler.ListenForErrors()
+}
+
+func (scheduler *Scheduler) ListenForErrors() {
+	log.Info().Msg("Starting to listen for errors")
+
+	go func() {
+		for err := range scheduler.errorChannel {
+			log.Error().Err(err).Msg("Received an error from the scheduler")
 		}
 	}()
 }
