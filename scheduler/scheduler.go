@@ -56,10 +56,14 @@ func (scheduler *Scheduler) ListenForErrors() {
 		for err := range scheduler.errorChannel {
 			switch e := err.(type) {
 			case *custom_error.FatalError:
-				log.Fatal().Err(e).Msg("Fatal error encountered, shutting down scheduler")
+				log.Fatal().Err(e).Str("jobName", scheduler.job.Name()).Msg("Fatal error encountered, shutting down scheduler")
 				scheduler.Stop()
+			case *custom_error.WarnError:
+				log.Warn().Err(e).Str("jobName", scheduler.job.Name()).Msg("Warning")
+			case *custom_error.InfoError:
+				log.Info().Err(e).Str("jobName", scheduler.job.Name()).Msg("Info")
 			default:
-				log.Error().Err(e).Msg("Received an error from the scheduler")
+				log.Error().Err(e).Str("jobName", scheduler.job.Name()).Msg("Received an error from the scheduler")
 			}
 
 		}

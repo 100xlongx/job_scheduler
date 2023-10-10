@@ -1,8 +1,7 @@
 package job
 
 import (
-	"errors"
-
+	"github.com/100xlongx/job_scheduler/custom_error"
 	"github.com/rs/zerolog/log"
 )
 
@@ -22,7 +21,7 @@ func (job *HelloWorldJob) Execute() error {
 	job.count++
 	if job.count > job.maxCount {
 		// return custom_error.NewFatalError("job has been executed too many times")
-		return errors.New("job has been executed too many times")
+		return custom_error.NewWarnError("job has been executed too many times")
 	}
 
 	log.Info().Msg("Hello World")

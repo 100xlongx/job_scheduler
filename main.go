@@ -27,8 +27,6 @@ func main() {
 
 	scheduler := scheduler.New(ticker, job)
 
-	scheduler.Start()
-
 	if err := scheduler.Start(); err != nil {
 		log.Error().Err(err).Msg("Failed to start the scheduler")
 		return
