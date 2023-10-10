@@ -2,7 +2,8 @@ package job
 
 import (
 	"errors"
-	"fmt"
+
+	"github.com/rs/zerolog/log"
 )
 
 type HelloWorldJob struct {
@@ -22,7 +23,9 @@ func (job *HelloWorldJob) Execute() error {
 	if job.count > job.maxCount {
 		return errors.New("job has been executed too many times")
 	}
-	fmt.Println("Hello World")
+
+	log.Info().Msg("Hello World")
+
 	return nil
 }
 

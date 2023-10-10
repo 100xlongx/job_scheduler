@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/100xlongx/job_scheduler/job"
+	"github.com/rs/zerolog/log"
 )
 
 type Scheduler struct {
@@ -22,7 +23,7 @@ func New(ticker *time.Ticker, job job.Job) *Scheduler {
 }
 
 func (scheduler *Scheduler) Start() {
-	fmt.Println("Starting scheduler")
+	log.Info().Msg("Starting scheduler")
 
 	go func() {
 		for {
@@ -30,11 +31,11 @@ func (scheduler *Scheduler) Start() {
 			case <-scheduler.doneChannel:
 				return
 			case t := <-scheduler.ticker.C:
-				fmt.Println("Executing ticket at", t)
+				log.Info().Time("time", t).Str("jobName", scheduler.job.Name()).Msg("Executing job")
 				err := scheduler.job.Execute()
 
 				if err != nil {
-					fmt.Println("Error executing job", err)
+					log.Error().Err(err).Msg("Error executing job")
 				}
 			}
 		}
