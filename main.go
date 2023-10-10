@@ -19,6 +19,16 @@ func InitLogger() {
 	log.Logger = log.Output(output)
 }
 
+func ListenForFeedback(s *scheduler.Scheduler) {
+	feedback := s.Feedback()
+
+	go func() {
+		for msg := range feedback {
+			log.Info().Msg(msg)
+		}
+	}()
+}
+
 func main() {
 	InitLogger()
 
@@ -31,6 +41,8 @@ func main() {
 		log.Error().Err(err).Msg("Failed to start the scheduler")
 		return
 	}
+
+	ListenForFeedback(scheduler)
 
 	time.Sleep(1 * time.Minute)
 

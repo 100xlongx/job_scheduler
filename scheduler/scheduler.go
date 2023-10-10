@@ -10,18 +10,20 @@ import (
 )
 
 type Scheduler struct {
-	job          job.Job
-	ticker       *time.Ticker
-	doneChannel  chan bool
-	errorChannel chan error
+	job             job.Job
+	ticker          *time.Ticker
+	doneChannel     chan bool
+	errorChannel    chan error
+	feedbackChannel chan string
 }
 
 func New(ticker *time.Ticker, job job.Job) *Scheduler {
 	return &Scheduler{
-		job:          job,
-		ticker:       ticker,
-		doneChannel:  make(chan bool),
-		errorChannel: make(chan error),
+		job:             job,
+		ticker:          ticker,
+		doneChannel:     make(chan bool),
+		errorChannel:    make(chan error),
+		feedbackChannel: make(chan string),
 	}
 }
 
@@ -37,7 +39,9 @@ func (scheduler *Scheduler) Start() error {
 				log.Info().Time("time", t).Str("jobName", scheduler.job.Name()).Msg("Executing job")
 				err := scheduler.job.Execute()
 
-				if err != nil {
+				if err == nil {
+					// scheduler.feedbackChannel <- fmt.Sprintf("Job %s completed successfully", scheduler.job.Name())
+				} else {
 					scheduler.errorChannel <- err
 				}
 			}
@@ -68,6 +72,10 @@ func (scheduler *Scheduler) ListenForErrors() {
 
 		}
 	}()
+}
+
+func (scheduler *Scheduler) Feedback() <-chan string {
+	return scheduler.feedbackChannel
 }
 
 func (scheduler *Scheduler) Stop() error {
